@@ -37,7 +37,7 @@ const styles = StyleSheet.create({
   plusIcon: {
     fontSize: 50,
     position: 'absolute',
-    bottom: 20,
+    bottom: 5,
     right: 20,
     backgroundColor:'#C0C0FF',
     color:'white',
