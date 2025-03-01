@@ -15,7 +15,7 @@ const NoteEdit = () => {
         throw new Error("NoteEdit must be used within a NoteProvider");
     }
     
-    const { addNote, archiveNote, deleteNote } = noteContext;
+    const { addNote, archiveNote, deleteNote, updateNote } = noteContext;
     
     // Get note from params if editing existing note
     const noteParam = route.params?.note;
@@ -26,6 +26,7 @@ const NoteEdit = () => {
     const [isPinned, setIsPinned] = useState(noteParam?.isPinned || false);
     const [hasReminder, setHasReminder] = useState(noteParam?.hasReminder || false);
     const [isArchived, setIsArchived] = useState(noteParam?.isArchived || false);
+    const [reminderDateTime, setReminderDateTime] = useState(noteParam?.reminderDateTime || '');
 
     // State for undo/redo functionality
     const [history, setHistory] = useState([]);
@@ -53,48 +54,69 @@ const NoteEdit = () => {
 
     // Handle reminder action
     const handleReminder = () => {
-        setHasReminder(!hasReminder);
-        Alert.alert("Reminder " + (hasReminder ? "removed" : "set"));
+        const newReminderState = !hasReminder;
+        setHasReminder(newReminderState);
+        
+        if (newReminderState) {
+            // For simplicity, set reminder to one day from now
+            const oneDayLater = new Date();
+            oneDayLater.setDate(oneDayLater.getDate() + 1);
+            setReminderDateTime(oneDayLater.toISOString());
+            Alert.alert("Reminder set for tomorrow");
+        } else {
+            setReminderDateTime('');
+            Alert.alert("Reminder removed");
+        }
     };
 
     // Handle archive action
     const handleArchive = () => {
-        setIsArchived(!isArchived);
+        const newArchivedState = !isArchived;
+        setIsArchived(newArchivedState);
         Alert.alert("Note " + (isArchived ? "unarchived" : "archived"));
         
-        if (!isArchived) {
-            // Create a note object to archive
-            const noteData = {
-                id: noteParam?.id || Date.now().toString(),
-                title,
-                content: noteContent,
-                isPinned,
-                hasReminder,
-                isArchived: true,
-                updatedAt: new Date().toISOString()
-            };
-            
-            // Archive the note using context
-            archiveNote(noteData);
-            
-            // If archiving, save and go back after a short delay
+        // Create a note object to archive/unarchive
+        const noteData = {
+            id: noteParam?.id || Date.now().toString(),
+            title,
+            content: noteContent,
+            isPinned,
+            hasReminder,
+            isArchived: newArchivedState,
+            updatedAt: new Date().toISOString(),
+            reminderDateTime: hasReminder ? reminderDateTime : undefined
+        };
+        
+        // Archive the note using context
+        archiveNote(noteData);
+        
+        // If archiving, save and go back after a short delay
+        if (newArchivedState) {
             setTimeout(() => saveAndGoBack(), 1000);
         }
     };
 
     // Save the note and navigate back
     const saveAndGoBack = () => {
+        // Check if title and content are not empty
+        if (!title.trim() || !noteContent.trim()) {
+            // If either is empty, do not save and return early
+            navigation.goBack();
+            return;
+        }
+    
         // Create a note object to pass back
-        const noteData: Note = {
+        const noteData = {
             id: noteParam?.id || Date.now().toString(),
             title,
             content: noteContent,
             isPinned,
             hasReminder,
             isArchived,
-            updatedAt: new Date().toISOString()
+            updatedAt: new Date().toISOString(),
+            reminderDateTime: hasReminder ? reminderDateTime : undefined
         };
-
+    
         // Add/Update the note in context
         addNote(noteData);
         
@@ -161,7 +183,8 @@ const NoteEdit = () => {
                             isPinned,
                             hasReminder,
                             isArchived,
-                            updatedAt: new Date().toISOString()
+                            updatedAt: new Date().toISOString(),
+                            reminderDateTime: hasReminder ? reminderDateTime : undefined
                         };
                         
                         // Delete the note using context

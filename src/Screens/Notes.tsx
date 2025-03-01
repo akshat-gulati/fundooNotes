@@ -1,11 +1,19 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { Image, StyleSheet, Text, View, Dimensions, TouchableOpacity, SafeAreaView } from 'react-native';
+import { Image, StyleSheet, Text, View, Dimensions, TouchableOpacity, SafeAreaView, ScrollView } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import Svg, { Rect, Defs, Mask, Circle } from 'react-native-svg';
 import AccountModal from '../Components/AccountModal';
 import { NoteContext, Note } from '../logic/NoteContext';
 
 const { width, height } = Dimensions.get('window');
+
+const formatDateTime = (isoString) => {
+  if (!isoString) return '';
+  const date = new Date(isoString);
+  const formattedDate = date.toISOString().split('T')[0];
+  const formattedTime = date.toTimeString().split(' ')[0];
+  return `${formattedDate}, ${formattedTime}`;
+};
 
 // SearchBar Component
 const SearchBar = () => {
@@ -71,50 +79,43 @@ const Notes = () => {
   const navigation = useNavigation();
   const route = useRoute();
   const noteContext = useContext(NoteContext);
-  
+
   // Check if context exists
   if (!noteContext) {
     throw new Error("Notes must be used within a NoteProvider");
   }
-  
-  const { notes, addNote } = noteContext;
+
+  const { notes, addNote, updateNote } = noteContext;
 
   // Listen for changes when returning from NoteEdit screen
   useEffect(() => {
     if (route.params?.savedNote) {
       const updatedNote = route.params.savedNote;
-      
+
       // Check if the note is new or being updated
       const existingNoteIndex = notes.findIndex(note => note.id === updatedNote.id);
-      
-      if (existingNoteIndex === -1) {
+
+      if (existingNoteIndex === -1 && !updatedNote.isArchived) {
         // This is a new note, add it
         addNote(updatedNote);
-      } else {
+      } else if (existingNoteIndex !== -1) {
         // This is an existing note being updated
-        // Find the current note and replace it
-        const updatedNotes = [...notes];
-        updatedNotes[existingNoteIndex] = updatedNote;
-        
-        // Since we're replacing the entire notes array, we need to update context
-        // This would typically be handled by a separate updateNote function in the context
-        // But we'll work with what we have
-        addNote(updatedNote);
+        updateNote(updatedNote);
       }
-      
+
       // Clear the params to prevent multiple updates
       navigation.setParams({ savedNote: undefined });
     }
   }, [route.params?.savedNote]);
 
-  const handleNotePress = (note: Note) => {
+  const handleNotePress = (note) => {
     navigation.navigate('NoteEdit', { note });
   };
-  
+
   // Function to create a new note
   const handleCreateNewNote = () => {
     // Create a new empty note
-    const newNote: Note = {
+    const newNote = {
       id: Date.now().toString(), // Generate a unique ID
       title: '',
       content: '',
@@ -123,7 +124,7 @@ const Notes = () => {
       isArchived: false,
       updatedAt: new Date().toISOString()
     };
-    
+
     // Navigate to NoteEdit with the new empty note
     navigation.navigate('NoteEdit', { note: newNote });
   };
@@ -134,18 +135,27 @@ const Notes = () => {
         <SearchBar />
 
         {notes.length > 0 ? (
+          <ScrollView>
           <View style={styles.notesContainer}>
-            {notes.map((note) => (
-              <TouchableOpacity
-                style={styles.contentBox}
-                key={note.id}
-                onPress={() => handleNotePress(note)}
-              >
-                <Text style={styles.text}>{note.title}</Text>
-                <Text style={styles.text}>{note.content}</Text>
-              </TouchableOpacity>
-            ))}
+            {notes
+              .filter((note) => !note.isArchived)
+              .map((note) => (
+                <TouchableOpacity
+                  style={styles.contentBox}
+                  key={note.id}
+                  onPress={() => handleNotePress(note)}
+                >
+                  <Text style={styles.text}>{note.title}</Text>
+                  <Text style={styles.text}>{note.content}</Text>
+                  {note.hasReminder && note.reminderDateTime && (
+                    <View style={styles.dateTime}>
+                      <Text style={styles.text}>{formatDateTime(note.reminderDateTime)}</Text>
+                    </View>
+                  )}
+                </TouchableOpacity>
+              ))}
           </View>
+          </ScrollView>
         ) : (
           <View style={styles.centreContainer}>
             <Image style={styles.icon} source={require('../Assets/lightbulb.png')} />
@@ -277,5 +287,12 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     flexDirection: 'row',
     flexWrap: 'wrap',
+    marginBottom:80
+  },
+  dateTime:{
+    backgroundColor: '#4D4D4F',
+    padding: width * 0.01,
+    borderRadius: width * 0.025,
+    marginTop: height * 0.01,
   }
 });
