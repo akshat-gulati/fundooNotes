@@ -6,14 +6,33 @@ const { width, height } = Dimensions.get('window');
 const Label = () => {
   const navigation = useNavigation();
   const textInputRef = useRef<TextInput>(null);
-
   const [inputText, setinputText] = useState<string>('')
 
+  // Focus when component mounts
   useEffect(() => {
-    if (textInputRef.current) {
-      textInputRef.current.focus();
-    }
+    // Short timeout to ensure component is fully rendered
+    const timer = setTimeout(() => {
+      if (textInputRef.current) {
+        textInputRef.current.focus();
+      }
+    }, 100);
+    
+    return () => clearTimeout(timer);
   }, []);
+
+  // Add focus handler for navigation events (screen becomes active)
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('focus', () => {
+      // Short timeout to ensure component is fully rendered after navigation
+      setTimeout(() => {
+        if (textInputRef.current) {
+          textInputRef.current.focus();
+        }
+      }, 100);
+    });
+
+    return unsubscribe;
+  }, [navigation]);
 
   return (
     <SafeAreaView style={styles.safeAreaView}>
@@ -41,6 +60,7 @@ const Label = () => {
                 placeholderTextColor={'white'}
                 placeholder="Create new label"
                 style={styles.textInput}
+                autoFocus={true}
               />
             </View>
             <Image style={[styles.icon, styles.blueIcon]} source={require('../Assets/checkmark.png')} />

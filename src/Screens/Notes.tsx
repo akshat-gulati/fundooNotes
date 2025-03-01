@@ -4,7 +4,20 @@ import { useNavigation } from '@react-navigation/native';
 import Svg, { Rect, Defs, Mask, Circle } from 'react-native-svg';
 import AccountModal from '../Components/AccountModal';
 
+interface Note {
+  uuid: string;
+  title: string;
+  desc: string;
+  edited: Date;
+}
 
+const notes: Note[] = [
+  { uuid: '1a2b3c', title: 'Meeting Notes', desc: "We have a meeting today", edited: new Date('2025-02-28') },
+  { uuid: '4d5e6f', title: 'Project Plan', desc: "We have a meeting today", edited: new Date('2025-03-01') },
+  { uuid: '7g8h9i', title: 'Shopping List', desc: "We have a meeting today", edited: new Date('2025-02-27') }
+];
+
+console.log(notes);
 const { width, height } = Dimensions.get('window');
 
 // SearchBar Component
@@ -25,7 +38,6 @@ const SearchBar = () => {
           <Image style={[styles.searchIcon, styles.profileIcon]} source={require('../Assets/person.crop.circle.png')} />
         </TouchableOpacity>
         <AccountModal modalVisible={modalVisible} setModalVisible={setModalVisible} />
-
       </View>
     </View>
   );
@@ -69,22 +81,44 @@ const BottomBar = () => {
 
 // Main Notes Component
 const Notes = () => {
+
+  const navigation = useNavigation();
+
+  const handleNotePress = (note) => {
+    navigation.navigate('NoteEdit', { note });
+  };
+
   return (
     <SafeAreaView style={styles.safeAreacontainer}>
       <View style={styles.container}>
         <SearchBar />
-        <View style={styles.centreContainer}>
-          <Image style={styles.icon} source={require('../Assets/lightbulb.png')} />
-          <Text style={styles.helperText}>Notes you add appear here</Text>
-        </View>
-        <BottomBar />
+
+        {notes.length > 0 ? (
+          <View style={styles.notesContainer}>
+            {notes.map((note) => (
+              <TouchableOpacity
+              style={styles.contentBox}
+              key={note.uuid}
+              onPress={() => handleNotePress(note)}
+            >
+                <Text style={styles.text}>{note.title}</Text>
+                <Text style={styles.text}>{note.desc}</Text>
+                </TouchableOpacity>
+            ))}
+          </View>
+        ) : (
+          <View style={styles.centreContainer}>
+            <Image style={styles.icon} source={require('../Assets/lightbulb.png')} />
+            <Text style={styles.helperText}>Notes you add appear here</Text>
+          </View>
+        )}
       </View>
+      <BottomBar />
     </SafeAreaView>
   );
 };
 
 export default Notes;
-
 const styles = StyleSheet.create({
   safeAreacontainer: {
     flex: 1,
@@ -110,10 +144,9 @@ const styles = StyleSheet.create({
     marginTop: height * 0.02,
     fontSize: width * 0.05,
   },
-  // SearchBar styles
   searchContainer: {
     backgroundColor: '#2B2B2F',
-    borderRadius: 10,
+    borderRadius: width * 0.025,
     padding: width * 0.04,
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -142,16 +175,15 @@ const styles = StyleSheet.create({
   profileIcon: {
     marginLeft: width * 0.05,
   },
-  // BottomBar styles
   bottomContainer: {
     alignSelf: 'center',
     height: height * 0.1,
     width: '105%',
-    bottom: -46,
+    position: 'absolute',
+    bottom: 0,
     flexDirection: 'row',
-    position: 'relative',
     justifyContent: 'space-between',
-    left: -1
+    left: width * -0.005,
   },
   leftMost: {
     flexDirection: 'row',
@@ -168,8 +200,8 @@ const styles = StyleSheet.create({
     resizeMode: 'contain',
     height: height * 0.025,
     width: height * 0.025,
-    marginRight: 30,
-    marginTop: 10,
+    marginRight: width * 0.075,
+    marginTop: height * 0.012,
   },
   plusicon: {
     width: height * 0.05,
@@ -177,7 +209,7 @@ const styles = StyleSheet.create({
     resizeMode: 'contain',
     position: 'absolute',
     top: -height * 0.025,
-    right: 28,
+    right: width * 0.07,
     backgroundColor: '#3A393F',
     borderRadius: height * 0.025,
   },
@@ -187,6 +219,23 @@ const styles = StyleSheet.create({
     right: 0,
   },
   firstIcon: {
-    marginLeft: 25,
+    marginLeft: width * 0.06,
   },
+  contentBox: {
+    borderWidth: 1,
+    borderColor: 'white',
+    padding: width * 0.025,
+    marginVertical: height * 0.012,
+    borderRadius: width * 0.025,
+    width: '45%',
+  },
+  text: {
+    color: 'white',
+    fontSize: width * 0.03,
+  },
+  notesContainer: {
+    justifyContent: 'space-between',
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+  }
 });
