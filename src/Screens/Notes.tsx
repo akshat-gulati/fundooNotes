@@ -1,49 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { Image, StyleSheet, Text, View, Dimensions, TouchableOpacity, SafeAreaView } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import Svg, { Rect, Defs, Mask, Circle } from 'react-native-svg';
 import AccountModal from '../Components/AccountModal';
-
-interface Note {
-  id: string;
-  title: string;
-  content: string;
-  isPinned: boolean;
-  hasReminder: boolean;
-  isArchived: boolean;
-  updatedAt: string;
-}
-
-// Initial notes data - moved into the component to use state
-const initialNoteData: Note[] = [
-  { 
-    id: '1a2b3c', 
-    title: 'Meeting Notes', 
-    content: "We have a meeting today", 
-    isPinned: false,
-    hasReminder: false,
-    isArchived: false,
-    updatedAt: new Date('2025-02-28').toISOString()
-  },
-  { 
-    id: '4d5e6f', 
-    title: 'Project Plan', 
-    content: "We have a meeting today", 
-    isPinned: true,
-    hasReminder: false,
-    isArchived: false,
-    updatedAt: new Date('2025-03-01').toISOString()
-  },
-  { 
-    id: '7g8h9i', 
-    title: 'Shopping List', 
-    content: "We have a meeting today", 
-    isPinned: false,
-    hasReminder: true,
-    isArchived: false,
-    updatedAt: new Date('2025-02-27').toISOString()
-  }
-];
+import { NoteContext, Note } from '../logic/NoteContext';
 
 const { width, height } = Dimensions.get('window');
 
@@ -110,27 +70,37 @@ const BottomBar = ({ onCreateNewNote }) => {
 const Notes = () => {
   const navigation = useNavigation();
   const route = useRoute();
-  const [notes, setNotes] = useState<Note[]>(initialNoteData);
+  const noteContext = useContext(NoteContext);
+  
+  // Check if context exists
+  if (!noteContext) {
+    throw new Error("Notes must be used within a NoteProvider");
+  }
+  
+  const { notes, addNote } = noteContext;
 
   // Listen for changes when returning from NoteEdit screen
   useEffect(() => {
     if (route.params?.savedNote) {
       const updatedNote = route.params.savedNote;
       
-      // Update the notes array with the edited note
-      setNotes(prevNotes => {
-        const noteIndex = prevNotes.findIndex(note => note.id === updatedNote.id);
+      // Check if the note is new or being updated
+      const existingNoteIndex = notes.findIndex(note => note.id === updatedNote.id);
+      
+      if (existingNoteIndex === -1) {
+        // This is a new note, add it
+        addNote(updatedNote);
+      } else {
+        // This is an existing note being updated
+        // Find the current note and replace it
+        const updatedNotes = [...notes];
+        updatedNotes[existingNoteIndex] = updatedNote;
         
-        if (noteIndex !== -1) {
-          // Update existing note
-          const updatedNotes = [...prevNotes];
-          updatedNotes[noteIndex] = updatedNote;
-          return updatedNotes;
-        } else {
-          // Add new note
-          return [...prevNotes, updatedNote];
-        }
-      });
+        // Since we're replacing the entire notes array, we need to update context
+        // This would typically be handled by a separate updateNote function in the context
+        // But we'll work with what we have
+        addNote(updatedNote);
+      }
       
       // Clear the params to prevent multiple updates
       navigation.setParams({ savedNote: undefined });

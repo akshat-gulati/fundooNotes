@@ -1,14 +1,25 @@
 import { Image, SafeAreaView, StyleSheet, Text, View, Dimensions, TouchableOpacity, TextInput, Alert } from 'react-native';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { useNavigation, useRoute } from '@react-navigation/native';
+import { NoteContext, Note } from '../logic/NoteContext';
 
 const { width, height } = Dimensions.get('window');
 
 const NoteEdit = () => {
     const navigation = useNavigation();
     const route = useRoute();
+    const noteContext = useContext(NoteContext);
+    
+    // Check if context exists
+    if (!noteContext) {
+        throw new Error("NoteEdit must be used within a NoteProvider");
+    }
+    
+    const { addNote, archiveNote, deleteNote } = noteContext;
+    
     // Get note from params if editing existing note
     const noteParam = route.params?.note;
+    
     // State for the note content
     const [title, setTitle] = useState(noteParam?.title || '');
     const [noteContent, setNoteContent] = useState(noteParam?.content || '');
@@ -50,7 +61,22 @@ const NoteEdit = () => {
     const handleArchive = () => {
         setIsArchived(!isArchived);
         Alert.alert("Note " + (isArchived ? "unarchived" : "archived"));
+        
         if (!isArchived) {
+            // Create a note object to archive
+            const noteData = {
+                id: noteParam?.id || Date.now().toString(),
+                title,
+                content: noteContent,
+                isPinned,
+                hasReminder,
+                isArchived: true,
+                updatedAt: new Date().toISOString()
+            };
+            
+            // Archive the note using context
+            archiveNote(noteData);
+            
             // If archiving, save and go back after a short delay
             setTimeout(() => saveAndGoBack(), 1000);
         }
@@ -59,7 +85,7 @@ const NoteEdit = () => {
     // Save the note and navigate back
     const saveAndGoBack = () => {
         // Create a note object to pass back
-        const noteData = {
+        const noteData: Note = {
             id: noteParam?.id || Date.now().toString(),
             title,
             content: noteContent,
@@ -69,11 +95,14 @@ const NoteEdit = () => {
             updatedAt: new Date().toISOString()
         };
 
+        // Add/Update the note in context
+        addNote(noteData);
+        
         // Set params before navigating back
         navigation.setParams({ savedNote: noteData });
         
         // Navigate back to the Notes screen with the saved note
-        navigation.goBack({ savedNote: noteData });
+        navigation.goBack();
     };
 
     // Handle back button click - save and navigate back
@@ -124,6 +153,20 @@ const NoteEdit = () => {
                 { text: "Share", onPress: () => console.log("Share") },
                 {
                     text: "Delete", onPress: () => {
+                        // Create a note object to delete
+                        const noteData = {
+                            id: noteParam?.id || Date.now().toString(),
+                            title,
+                            content: noteContent,
+                            isPinned,
+                            hasReminder,
+                            isArchived,
+                            updatedAt: new Date().toISOString()
+                        };
+                        
+                        // Delete the note using context
+                        deleteNote(noteData);
+                        
                         Alert.alert("Note deleted");
                         navigation.goBack();
                     }
@@ -169,7 +212,7 @@ const NoteEdit = () => {
                     <TextInput
                         style={styles.titleInput}
                         placeholder='Title'
-                        placeholderTextColor={"red"}
+                        placeholderTextColor={"#888"}
                         value={title}
                         onChangeText={setTitle}
                     />
@@ -178,7 +221,7 @@ const NoteEdit = () => {
                         multiline={true}
                         textAlignVertical="top"
                         placeholder='Note'
-                        placeholderTextColor={"red"}
+                        placeholderTextColor={"#888"}
                         value={noteContent}
                         onChangeText={setNoteContent}
                     />
@@ -250,34 +293,29 @@ const styles = StyleSheet.create({
     // --------------------------------------------------------
     EditContainer: {
         flex: 1,
-        // marginTop: width * 0.04,
         width: '100%',
-        // height: '100%',
         backgroundColor: 'white',
         borderRadius: 10,
         padding: width * 0.04,
     },
     titleInput: {
-        fontSize: 24, // Adjust the size as needed
+        fontSize: 24,
         fontWeight: 'bold',
         color: 'black',
-
+        marginBottom: 10,
     },
     noteInput: {
         fontSize: 20,
-        backgroundColor: 'pink',
-        // height: '100%',
-        // width: '100%',
+        color: 'black',
+        flex: 1,
     },
     bottomBar: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         width: '100%',
-        // backgroundColor:'red',
         bottom: 0,
         paddingHorizontal: width * 0.04,
         paddingVertical: width * 0.01,
-
     },
     bottomEachSection: {
         flexDirection: 'row',
