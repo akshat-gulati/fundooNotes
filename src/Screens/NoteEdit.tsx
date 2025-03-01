@@ -294,19 +294,18 @@ const styles = StyleSheet.create({
     EditContainer: {
         flex: 1,
         width: '100%',
-        backgroundColor: 'white',
         borderRadius: 10,
         padding: width * 0.04,
     },
     titleInput: {
         fontSize: 24,
         fontWeight: 'bold',
-        color: 'black',
+        color: 'white',
         marginBottom: 10,
     },
     noteInput: {
         fontSize: 20,
-        color: 'black',
+        color: 'white',
         flex: 1,
     },
     bottomBar: {

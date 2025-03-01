@@ -15,7 +15,7 @@ const CustomDrawerContent = (props: any) => {
   return (
     <DrawerContentScrollView {...props}>
       <View style={styles.header}>
-        <Text style={[styles.headerText, { fontWeight: '700' }]}>fundoo</Text>
+        <Text style={[styles.headerText, { fontWeight: 'bold' }]}>fundoo</Text>
         <Text style={styles.headerText}> Notes</Text>
       </View>
       <View style={[styles.divider, { width: '100%' }]} />

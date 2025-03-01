@@ -28,35 +28,31 @@ export interface NoteContextType {
 }
 
 // Initial notes data
-export const initialNoteData: Note[] = [
-  { 
-    id: '1a2b3c', 
-    title: 'Meeting Notes', 
-    content: "We have a meeting today", 
-    isPinned: false,
-    hasReminder: false,
-    isArchived: false,
-    updatedAt: new Date('2025-02-28').toISOString()
-  },
-  { 
-    id: '4d5e6f', 
-    title: 'Project Plan', 
-    content: "Project planning details", 
-    isPinned: true,
-    hasReminder: false,
-    isArchived: false,
-    updatedAt: new Date('2025-03-01').toISOString()
-  },
-  { 
-    id: '7g8h9i', 
-    title: 'Shopping List', 
-    content: "Groceries to buy", 
-    isPinned: false,
-    hasReminder: true,
-    isArchived: false,
-    updatedAt: new Date('2025-02-27').toISOString()
-  }
-];
+export const initialNoteData: Note[] = [{
+  id: '1a2b3c',
+  title: 'Meeting Notes',
+  content: 'We have a meeting today',
+  isPinned: false,
+  hasReminder: false,
+  isArchived: false,
+  updatedAt: new Date('2025-02-28').toISOString(),
+}, {
+  id: '4d5e6f',
+  title: 'Project Plan',
+  content: 'Project planning details',
+  isPinned: true,
+  hasReminder: false,
+  isArchived: false,
+  updatedAt: new Date('2025-03-01').toISOString(),
+}, {
+  id: '7g8h9i',
+  title: 'Shopping List',
+  content: 'Groceries to buy',
+  isPinned: false,
+  hasReminder: true,
+  isArchived: false,
+  updatedAt: new Date('2025-02-27').toISOString(),
+}];
 
 // Create a Context
 export const NoteContext = createContext<NoteContextType | undefined>(undefined);
@@ -81,7 +77,6 @@ export const NoteProvider = ({ children }: { children: ReactNode }) => {
     const addNote = (note: Note) => {
         // Check if note already exists
         const existingNoteIndex = notes.findIndex(n => n.id === note.id);
-        
         if (existingNoteIndex !== -1) {
             // Update existing note
             const updatedNotes = [...notes];
@@ -91,29 +86,25 @@ export const NoteProvider = ({ children }: { children: ReactNode }) => {
             // Add new note
             setNotes([...notes, note]);
         }
-        
         // If note has a reminder, add/update it in reminders as well
         if (note.hasReminder) {
             addReminder(note);
         }
     };
-    
     const updateNote = (updatedNote: Note) => {
         setNotes(notes.map(note => note.id === updatedNote.id ? updatedNote : note));
-        
         // Update in reminders if needed
         if (updatedNote.hasReminder) {
-            setReminders(reminders.map(reminder => 
+            setReminders(reminders.map(reminder =>
                 reminder.id === updatedNote.id ? updatedNote : reminder
             ));
         } else {
             // Remove from reminders if reminder is turned off
             setReminders(reminders.filter(reminder => reminder.id !== updatedNote.id));
         }
-        
         // Update in archive if needed
         if (updatedNote.isArchived) {
-            setArchive(archive.map(archivedNote => 
+            setArchive(archive.map(archivedNote =>
                 archivedNote.id === updatedNote.id ? updatedNote : archivedNote
             ));
         } else {
@@ -125,7 +116,6 @@ export const NoteProvider = ({ children }: { children: ReactNode }) => {
     const addReminder = (reminder: Note) => {
         // Check if reminder already exists
         const existingReminderIndex = reminders.findIndex(r => r.id === reminder.id);
-        
         if (existingReminderIndex !== -1) {
             // Update existing reminder
             const updatedReminders = [...reminders];
@@ -140,7 +130,6 @@ export const NoteProvider = ({ children }: { children: ReactNode }) => {
     const archiveNote = (note: Note) => {
         // If note already exists in archive, update it
         const existingArchiveIndex = archive.findIndex(n => n.id === note.id);
-        
         if (existingArchiveIndex !== -1) {
             const updatedArchive = [...archive];
             updatedArchive[existingArchiveIndex] = note;
@@ -148,7 +137,6 @@ export const NoteProvider = ({ children }: { children: ReactNode }) => {
         } else {
             // Add to archive
             setArchive([...archive, note]);
-            
             // Remove from main notes if being archived
             if (note.isArchived) {
                 setNotes(notes.filter(n => n.id !== note.id));
@@ -159,15 +147,12 @@ export const NoteProvider = ({ children }: { children: ReactNode }) => {
     const deleteNote = (note: Note) => {
         // Add to bin
         setBin([...bin, note]);
-        
         // Remove from notes
         setNotes(notes.filter(n => n.id !== note.id));
-        
         // Remove from reminders if it exists there
         if (note.hasReminder) {
             setReminders(reminders.filter(r => r.id !== note.id));
         }
-        
         // Remove from archive if it exists there
         if (note.isArchived) {
             setArchive(archive.filter(a => a.id !== note.id));
@@ -184,12 +169,10 @@ export const NoteProvider = ({ children }: { children: ReactNode }) => {
         if (labels[labelName]) {
             // Check if note already exists in this label
             const existingNoteIndex = labels[labelName].findIndex(n => n.id === note.id);
-            
             if (existingNoteIndex !== -1) {
                 // Update existing note in label
                 const updatedLabelNotes = [...labels[labelName]];
                 updatedLabelNotes[existingNoteIndex] = note;
-                
                 setLabels({
                     ...labels,
                     [labelName]: updatedLabelNotes,
@@ -205,20 +188,20 @@ export const NoteProvider = ({ children }: { children: ReactNode }) => {
     };
 
     return (
-        <NoteContext.Provider 
-            value={{ 
-                notes, 
-                addNote, 
+        <NoteContext.Provider
+            value={{
+                notes,
+                addNote,
                 updateNote,
-                reminders, 
-                addReminder, 
-                archive, 
-                archiveNote, 
-                bin, 
-                deleteNote, 
-                labels, 
-                addLabel, 
-                addNoteToLabel 
+                reminders,
+                addReminder,
+                archive,
+                archiveNote,
+                bin,
+                deleteNote,
+                labels,
+                addLabel,
+                addNoteToLabel,
             }}
         >
             {children}
