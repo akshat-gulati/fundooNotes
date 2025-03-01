@@ -25,7 +25,7 @@ const SearchBar = () => {
           <Image style={[styles.searchIcon, styles.profileIcon]} source={require('../Assets/person.crop.circle.png')} />
         </TouchableOpacity>
         <AccountModal modalVisible={modalVisible} setModalVisible={setModalVisible} />
-        
+
       </View>
     </View>
   );
@@ -33,6 +33,7 @@ const SearchBar = () => {
 
 // BottomBar Component
 const BottomBar = () => {
+  const navigation = useNavigation();
   return (
     <View style={styles.bottomContainer}>
       <View style={styles.leftMost}>
@@ -59,7 +60,9 @@ const BottomBar = () => {
           />
         </Svg>
       </View>
-      <Image style={styles.plusicon} source={require('../Assets/gplus.png')} />
+      <TouchableOpacity style={styles.plusicon} onPress={() => navigation.navigate('NoteEdit')}>
+        <Image source={require('../Assets/gplus.png')} />
+      </TouchableOpacity>
     </View>
   );
 };

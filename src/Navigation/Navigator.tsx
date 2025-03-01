@@ -10,6 +10,8 @@ import Bin from '../Screens/Bin';
 import Settings from '../Screens/Settings';
 import Feedback from '../Screens/Feedback';
 import Help from '../Screens/Help';
+import { createStackNavigator } from '@react-navigation/stack';
+import NoteEdit from '../Screens/NoteEdit';
 
 const Drawer = createDrawerNavigator();
 
@@ -31,10 +33,21 @@ const DrawerNavigation = () => {
   );
 };
 
+const Stack = createStackNavigator();
+
+const StackNavigation = () => {
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false}}>
+      <Stack.Screen name="Drawer" component={DrawerNavigation} />
+      <Stack.Screen name="NoteEdit" component={NoteEdit} />
+    </Stack.Navigator>
+  );
+}
+
 const Navigator = () => {
   return (
     <NavigationContainer>
-      <DrawerNavigation />
+      <StackNavigation />
     </NavigationContainer>
   );
 };
