@@ -1,23 +1,50 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Image, StyleSheet, Text, View, Dimensions, TouchableOpacity, SafeAreaView } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import Svg, { Rect, Defs, Mask, Circle } from 'react-native-svg';
 import AccountModal from '../Components/AccountModal';
 
 interface Note {
-  uuid: string;
+  id: string;
   title: string;
-  desc: string;
-  edited: Date;
+  content: string;
+  isPinned: boolean;
+  hasReminder: boolean;
+  isArchived: boolean;
+  updatedAt: string;
 }
 
-const notes: Note[] = [
-  { uuid: '1a2b3c', title: 'Meeting Notes', desc: "We have a meeting today", edited: new Date('2025-02-28') },
-  { uuid: '4d5e6f', title: 'Project Plan', desc: "We have a meeting today", edited: new Date('2025-03-01') },
-  { uuid: '7g8h9i', title: 'Shopping List', desc: "We have a meeting today", edited: new Date('2025-02-27') }
+// Initial notes data - moved into the component to use state
+const initialNoteData: Note[] = [
+  { 
+    id: '1a2b3c', 
+    title: 'Meeting Notes', 
+    content: "We have a meeting today", 
+    isPinned: false,
+    hasReminder: false,
+    isArchived: false,
+    updatedAt: new Date('2025-02-28').toISOString()
+  },
+  { 
+    id: '4d5e6f', 
+    title: 'Project Plan', 
+    content: "We have a meeting today", 
+    isPinned: true,
+    hasReminder: false,
+    isArchived: false,
+    updatedAt: new Date('2025-03-01').toISOString()
+  },
+  { 
+    id: '7g8h9i', 
+    title: 'Shopping List', 
+    content: "We have a meeting today", 
+    isPinned: false,
+    hasReminder: true,
+    isArchived: false,
+    updatedAt: new Date('2025-02-27').toISOString()
+  }
 ];
 
-console.log(notes);
 const { width, height } = Dimensions.get('window');
 
 // SearchBar Component
@@ -44,7 +71,7 @@ const SearchBar = () => {
 };
 
 // BottomBar Component
-const BottomBar = () => {
+const BottomBar = ({ onCreateNewNote }) => {
   const navigation = useNavigation();
   return (
     <View style={styles.bottomContainer}>
@@ -72,7 +99,7 @@ const BottomBar = () => {
           />
         </Svg>
       </View>
-      <TouchableOpacity style={styles.plusicon} onPress={() => navigation.navigate('NoteEdit')}>
+      <TouchableOpacity style={styles.plusicon} onPress={onCreateNewNote}>
         <Image source={require('../Assets/gplus.png')} />
       </TouchableOpacity>
     </View>
@@ -81,11 +108,54 @@ const BottomBar = () => {
 
 // Main Notes Component
 const Notes = () => {
-
   const navigation = useNavigation();
+  const route = useRoute();
+  const [notes, setNotes] = useState<Note[]>(initialNoteData);
 
-  const handleNotePress = (note) => {
+  // Listen for changes when returning from NoteEdit screen
+  useEffect(() => {
+    if (route.params?.savedNote) {
+      const updatedNote = route.params.savedNote;
+      
+      // Update the notes array with the edited note
+      setNotes(prevNotes => {
+        const noteIndex = prevNotes.findIndex(note => note.id === updatedNote.id);
+        
+        if (noteIndex !== -1) {
+          // Update existing note
+          const updatedNotes = [...prevNotes];
+          updatedNotes[noteIndex] = updatedNote;
+          return updatedNotes;
+        } else {
+          // Add new note
+          return [...prevNotes, updatedNote];
+        }
+      });
+      
+      // Clear the params to prevent multiple updates
+      navigation.setParams({ savedNote: undefined });
+    }
+  }, [route.params?.savedNote]);
+
+  const handleNotePress = (note: Note) => {
     navigation.navigate('NoteEdit', { note });
+  };
+  
+  // Function to create a new note
+  const handleCreateNewNote = () => {
+    // Create a new empty note
+    const newNote: Note = {
+      id: Date.now().toString(), // Generate a unique ID
+      title: '',
+      content: '',
+      isPinned: false,
+      hasReminder: false,
+      isArchived: false,
+      updatedAt: new Date().toISOString()
+    };
+    
+    // Navigate to NoteEdit with the new empty note
+    navigation.navigate('NoteEdit', { note: newNote });
   };
 
   return (
@@ -97,13 +167,13 @@ const Notes = () => {
           <View style={styles.notesContainer}>
             {notes.map((note) => (
               <TouchableOpacity
-              style={styles.contentBox}
-              key={note.uuid}
-              onPress={() => handleNotePress(note)}
-            >
+                style={styles.contentBox}
+                key={note.id}
+                onPress={() => handleNotePress(note)}
+              >
                 <Text style={styles.text}>{note.title}</Text>
-                <Text style={styles.text}>{note.desc}</Text>
-                </TouchableOpacity>
+                <Text style={styles.text}>{note.content}</Text>
+              </TouchableOpacity>
             ))}
           </View>
         ) : (
@@ -113,7 +183,7 @@ const Notes = () => {
           </View>
         )}
       </View>
-      <BottomBar />
+      <BottomBar onCreateNewNote={handleCreateNewNote} />
     </SafeAreaView>
   );
 };

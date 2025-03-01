@@ -51,13 +51,13 @@ const NoteEdit = () => {
         setIsArchived(!isArchived);
         Alert.alert("Note " + (isArchived ? "unarchived" : "archived"));
         if (!isArchived) {
-            // If archiving, go back after a short delay
-            setTimeout(() => navigation.goBack(), 1000);
+            // If archiving, save and go back after a short delay
+            setTimeout(() => saveAndGoBack(), 1000);
         }
     };
 
-    // Handle save and back navigation
-    const handleBack = () => {
+    // Save the note and navigate back
+    const saveAndGoBack = () => {
         // Create a note object to pass back
         const noteData = {
             id: noteParam?.id || Date.now().toString(),
@@ -69,9 +69,16 @@ const NoteEdit = () => {
             updatedAt: new Date().toISOString()
         };
 
-        // Navigate back with the updated note
-        // navigation.navigate('NotesList', { savedNote: noteData });
-        navigation.goBack();
+        // Set params before navigating back
+        navigation.setParams({ savedNote: noteData });
+        
+        // Navigate back to the Notes screen with the saved note
+        navigation.goBack({ savedNote: noteData });
+    };
+
+    // Handle back button click - save and navigate back
+    const handleBack = () => {
+        saveAndGoBack();
     };
 
     // Undo functionality

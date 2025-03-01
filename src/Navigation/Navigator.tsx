@@ -39,6 +39,7 @@ const StackNavigation = () => {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false}}>
       <Stack.Screen name="Drawer" component={DrawerNavigation} />
+      <Stack.Screen name="Notes" component={Notes} />
       <Stack.Screen name="NoteEdit" component={NoteEdit} />
     </Stack.Navigator>
   );
