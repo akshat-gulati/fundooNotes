@@ -1,12 +1,15 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Image, StyleSheet, Text, View, Dimensions, TouchableOpacity, SafeAreaView } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import Svg, { Rect, Defs, Mask, Circle } from 'react-native-svg';
+import AccountModal from '../Components/AccountModal';
+
 
 const { width, height } = Dimensions.get('window');
 
 // SearchBar Component
 const SearchBar = () => {
+  const [modalVisible, setModalVisible] = useState(false);
   const navigation = useNavigation();
   return (
     <View style={styles.searchContainer}>
@@ -18,7 +21,11 @@ const SearchBar = () => {
       </View>
       <View style={styles.rightmost}>
         <Image style={[styles.searchIcon, styles.gridIcon]} source={require('../Assets/rectangle.grid.1x2.png')} />
-        <Image style={[styles.searchIcon, styles.profileIcon]} source={require('../Assets/person.crop.circle.png')} />
+        <TouchableOpacity onPress={() => setModalVisible(true)}>
+          <Image style={[styles.searchIcon, styles.profileIcon]} source={require('../Assets/person.crop.circle.png')} />
+        </TouchableOpacity>
+        <AccountModal modalVisible={modalVisible} setModalVisible={setModalVisible} />
+        
       </View>
     </View>
   );

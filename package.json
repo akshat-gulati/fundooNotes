@@ -17,6 +17,7 @@
     "metro": "^0.81.2",
     "react": "19.0.0",
     "react-native": "0.78.0",
+    "react-native-context-menu-view": "^1.17.0",
     "react-native-gesture-handler": "^2.24.0",
     "react-native-reanimated": "^3.17.0",
     "react-native-safe-area-context": "^5.2.0",
