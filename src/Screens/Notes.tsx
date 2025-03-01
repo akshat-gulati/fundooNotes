@@ -54,7 +54,7 @@ const BottomBar = ({ onCreateNewNote }) => {
           <Defs>
             <Mask id="mask" x="0" y="0" width={width * 0.5} height={height * 0.1}>
               <Rect x="0" y="0" width={width * 0.5} height={height * 0.1} fill="white" />
-              <Circle cx={width * 0.38} cy={height * 0.0} r={height * 0.04} fill="black" />
+              <Circle cx={width * 0.35} cy={-height * 0.020} r={height * 0.045} fill="black" />
             </Mask>
           </Defs>
           <Rect
@@ -68,7 +68,8 @@ const BottomBar = ({ onCreateNewNote }) => {
         </Svg>
       </View>
       <TouchableOpacity style={styles.plusicon} onPress={onCreateNewNote}>
-        <Image source={require('../Assets/gplus.png')} />
+        <Image style={{resizeMode: 'contain',height: height * 0.09,
+    width: height * 0.09}} source={require('../Assets/gplus.png')} />
       </TouchableOpacity>
     </View>
   );
@@ -254,14 +255,16 @@ const styles = StyleSheet.create({
     marginTop: height * 0.012,
   },
   plusicon: {
-    width: height * 0.05,
-    height: height * 0.05,
+    width: height * 0.07,
+    height: height * 0.07,
     resizeMode: 'contain',
     position: 'absolute',
-    top: -height * 0.025,
-    right: width * 0.07,
+    top: -height * 0.050,
+    right: width * 0.095,
     backgroundColor: '#3A393F',
-    borderRadius: height * 0.025,
+    borderRadius: height * 0.035,
+    justifyContent:'center',
+    alignItems:'center',
   },
   svg: {
     width: '100%',
