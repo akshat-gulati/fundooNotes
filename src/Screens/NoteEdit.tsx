@@ -15,11 +15,11 @@ const NoteEdit = () => {
     const [isPinned, setIsPinned] = useState(noteParam?.isPinned || false);
     const [hasReminder, setHasReminder] = useState(noteParam?.hasReminder || false);
     const [isArchived, setIsArchived] = useState(noteParam?.isArchived || false);
-    
+
     // State for undo/redo functionality
     const [history, setHistory] = useState([]);
     const [historyIndex, setHistoryIndex] = useState(-1);
-    
+
     // Save history when content changes
     useEffect(() => {
         if (title || noteContent) {
@@ -27,25 +27,25 @@ const NoteEdit = () => {
             if (historyIndex === -1 || title !== history[historyIndex]?.title || noteContent !== history[historyIndex]?.content) {
                 const newHistory = history.slice(0, historyIndex + 1);
                 newHistory.push({ title, content: noteContent });
-                
+
                 setHistory(newHistory);
                 setHistoryIndex(newHistory.length - 1);
             }
         }
     }, [title, noteContent]);
-    
+
     // Handle pin action
     const handlePin = () => {
         setIsPinned(!isPinned);
         Alert.alert(isPinned ? "Note unpinned" : "Note pinned");
     };
-    
+
     // Handle reminder action
     const handleReminder = () => {
         setHasReminder(!hasReminder);
         Alert.alert("Reminder " + (hasReminder ? "removed" : "set"));
     };
-    
+
     // Handle archive action
     const handleArchive = () => {
         setIsArchived(!isArchived);
@@ -55,7 +55,7 @@ const NoteEdit = () => {
             setTimeout(() => navigation.goBack(), 1000);
         }
     };
-    
+
     // Handle save and back navigation
     const handleBack = () => {
         // Create a note object to pass back
@@ -68,12 +68,12 @@ const NoteEdit = () => {
             isArchived,
             updatedAt: new Date().toISOString()
         };
-        
+
         // Navigate back with the updated note
         // navigation.navigate('NotesList', { savedNote: noteData });
         navigation.goBack();
     };
-    
+
     // Undo functionality
     const handleUndo = () => {
         if (historyIndex > 0) {
@@ -85,7 +85,7 @@ const NoteEdit = () => {
             Alert.alert("Nothing to undo");
         }
     };
-    
+
     // Redo functionality
     const handleRedo = () => {
         if (historyIndex < history.length - 1) {
@@ -97,17 +97,17 @@ const NoteEdit = () => {
             Alert.alert("Nothing to redo");
         }
     };
-    
+
     // Handle add attachment
     const handleAddAttachment = () => {
         Alert.alert("Add attachment", "This feature is coming soon");
     };
-    
+
     // Handle color palette
     const handleColorPalette = () => {
         Alert.alert("Change note color", "This feature is coming soon");
     };
-    
+
     // Handle more options
     const handleMoreOptions = () => {
         Alert.alert(
@@ -115,10 +115,12 @@ const NoteEdit = () => {
             "Choose an action",
             [
                 { text: "Share", onPress: () => console.log("Share") },
-                { text: "Delete", onPress: () => {
-                    Alert.alert("Note deleted");
-                    navigation.goBack();
-                }},
+                {
+                    text: "Delete", onPress: () => {
+                        Alert.alert("Note deleted");
+                        navigation.goBack();
+                    }
+                },
                 { text: "Make a copy", onPress: () => console.log("Make a copy") },
                 { text: "Cancel", style: "cancel" }
             ]
@@ -134,42 +136,42 @@ const NoteEdit = () => {
                     </TouchableOpacity>
                     <View style={styles.iconContainer}>
                         <TouchableOpacity onPress={handlePin}>
-                            <Image 
-                                style={[styles.icon, styles.iconSpacing]} 
-                                source={require('../Assets/pin.png')} 
+                            <Image
+                                style={[styles.icon, styles.iconSpacing]}
+                                source={require('../Assets/pin.png')}
                                 tintColor={isPinned ? '#FFD700' : 'white'}
                             />
                         </TouchableOpacity>
                         <TouchableOpacity onPress={handleReminder}>
-                            <Image 
-                                style={[styles.icon, styles.iconSpacing]} 
-                                source={require('../Assets/bell.fill.png')} 
+                            <Image
+                                style={[styles.icon, styles.iconSpacing]}
+                                source={require('../Assets/bell.fill.png')}
                                 tintColor={hasReminder ? '#FFD700' : 'white'}
                             />
                         </TouchableOpacity>
                         <TouchableOpacity onPress={handleArchive}>
-                            <Image 
-                                style={styles.icon} 
-                                source={require('../Assets/archivebox.png')} 
+                            <Image
+                                style={styles.icon}
+                                source={require('../Assets/archivebox.png')}
                                 tintColor={isArchived ? '#FFD700' : 'white'}
                             />
                         </TouchableOpacity>
                     </View>
                 </View>
                 <View style={styles.EditContainer}>
-                    <TextInput 
-                        style={styles.titleInput} 
-                        placeholder='Title' 
-                        placeholderTextColor={"red"} 
+                    <TextInput
+                        style={styles.titleInput}
+                        placeholder='Title'
+                        placeholderTextColor={"red"}
                         value={title}
                         onChangeText={setTitle}
                     />
-                    <TextInput 
-                        style={styles.noteInput} 
+                    <TextInput
+                        style={styles.noteInput}
                         multiline={true}
-                        textAlignVertical="top" 
-                        placeholder='Note' 
-                        placeholderTextColor={"red"} 
+                        textAlignVertical="top"
+                        placeholder='Note'
+                        placeholderTextColor={"red"}
                         value={noteContent}
                         onChangeText={setNoteContent}
                     />
@@ -197,9 +199,9 @@ const NoteEdit = () => {
 
                     <View style={styles.bottomEachSection}>
                         <TouchableOpacity onPress={handleMoreOptions}>
-                            <Image 
-                                style={[styles.icon, styles.iconSpacing, { transform: [{ rotate: '90deg' }] }]} 
-                                source={require('../Assets/ellipsis.png')} 
+                            <Image
+                                style={[styles.icon, styles.iconSpacing, { transform: [{ rotate: '90deg' }] }]}
+                                source={require('../Assets/ellipsis.png')}
                             />
                         </TouchableOpacity>
                     </View>
