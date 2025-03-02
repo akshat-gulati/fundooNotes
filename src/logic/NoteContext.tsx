@@ -189,6 +189,16 @@ export const initialNoteData: Note[] = [{
     reminderDateTime: new Date('2025-03-06T19:00:00').toISOString(),
   }];
 
+// Initial label data mapping
+export const initialLabelData = {
+  'Work': ['2', '9', '12', '14'], // Project Plan, Conference Call, Team Meeting, Client Presentation
+  'Personal': ['3', '4', '5', '7', '15', '16'], // Shopping List, Workout Routine, Birthday Reminder, Book List, Gardening Tips, Yoga Session
+  'Health': ['4', '11', '16'], // Workout Routine, Dentist Appointment, Yoga Session
+  'Travel': ['8', '13'], // Travel Plans, Weekend Plans
+  'Food': ['3', '6', '10', '18'], // Shopping List, Recipe Ideas, Grocery List, Dinner Reservation
+  'Appointments': ['11', '12', '17', '18'] // Dentist Appointment, Team Meeting, Car Service, Dinner Reservation
+};
+
 // Create a Context
 export const NoteContext = createContext<NoteContextType | undefined>(undefined);
 
@@ -215,6 +225,24 @@ export const NoteProvider = ({ children }: { children: ReactNode }) => {
         if (initialReminders.length > 0) {
             setReminders(initialReminders);
         }
+        
+        // Initialize labels with dummy data
+        const initialLabels: { [key: string]: Note[] } = {};
+        
+        // Process each label and add corresponding notes
+        Object.keys(initialLabelData).forEach(labelName => {
+            initialLabels[labelName] = [];
+            const noteIds = initialLabelData[labelName];
+            
+            noteIds.forEach(noteId => {
+                const note = initialNoteData.find(n => n.id === noteId);
+                if (note) {
+                    initialLabels[labelName].push(note);
+                }
+            });
+        });
+        
+        setLabels(initialLabels);
     }, []);
 
     const addNote = (note: Note) => {
