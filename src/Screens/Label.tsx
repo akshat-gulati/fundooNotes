@@ -1,4 +1,4 @@
-import { Keyboard, Image, SafeAreaView, StyleSheet, Text, TextInput, View, Dimensions, TouchableOpacity } from 'react-native';
+import { Keyboard, Image, SafeAreaView, StyleSheet, Text, TextInput, View, Dimensions, TouchableOpacity, FlatList } from 'react-native';
 import React, { useRef, useEffect, useState, useContext } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import { NoteContext, NoteContextType } from '../logic/NoteContext';
@@ -9,9 +9,17 @@ const Label = () => {
   const navigation = useNavigation();
   const textInputRef = useRef<TextInput>(null);
   const [inputText, setInputText] = useState<string>('');
+  const [editingLabel, setEditingLabel] = useState<string | null>(null);
   
-  // Access the context to use the addLabel function
-  const { addLabel } = useContext(NoteContext) as NoteContextType;
+  // Access the context to use the label functions
+  // Add deleteLabel and addNoteToLabel to the destructuring
+  const { 
+    labels, 
+    addLabel, 
+    removeNoteFromLabel, 
+    deleteLabel, 
+    addNoteToLabel 
+  } = useContext(NoteContext) as NoteContextType;
 
   // Focus when component mounts
   useEffect(() => {
@@ -39,18 +47,49 @@ const Label = () => {
     return unsubscribe;
   }, [navigation]);
 
-  // Handle creating a new label
-  const handleCreateLabel = () => {
+  // Handle creating a new label or updating existing label
+  const handleCreateOrUpdateLabel = () => {
     if (inputText.trim()) {
-      // Add the new label to context
-      addLabel(inputText.trim());
+      if (editingLabel) {
+        // Update existing label (delete old and create new)
+        const notesInLabel = labels[editingLabel] || [];
+        
+        // First add the new label
+        addLabel(inputText.trim());
+        
+        // Move all notes from old label to new label
+        notesInLabel.forEach(note => {
+          addNoteToLabel(inputText.trim(), note);
+          removeNoteFromLabel(editingLabel, note.id);
+        });
+        
+        // Delete the old label
+        deleteLabel(editingLabel);
+        
+        // Reset editing state
+        setEditingLabel(null);
+      } else {
+        // Add new label
+        addLabel(inputText.trim());
+      }
       
       // Clear input and dismiss keyboard
       setInputText('');
       Keyboard.dismiss();
-      
-      // Navigate back to drawer
-      navigation.goBack();
+    }
+  };
+  
+  // Handle deleting a label
+  const handleDeleteLabel = (labelName: string) => {
+    deleteLabel(labelName);
+  };
+  
+  // Start editing a label
+  const handleEditLabel = (labelName: string) => {
+    setEditingLabel(labelName);
+    setInputText(labelName);
+    if (textInputRef.current) {
+      textInputRef.current.focus();
     }
   };
 
@@ -64,11 +103,13 @@ const Label = () => {
           <Text style={styles.heading}>Edit Labels</Text>
           <View />
         </View>
+        
         <View>
           <View style={styles.inputBox}>
             <View style={styles.rowContainer}>
               <TouchableOpacity onPress={() => {
                 setInputText('');
+                setEditingLabel(null);
                 Keyboard.dismiss();
               }}>
                 <Image style={[styles.icon, styles.inputIcon]} source={require('../Assets/x.square.png')} />
@@ -78,16 +119,50 @@ const Label = () => {
                 onChangeText={setInputText}
                 ref={textInputRef}
                 placeholderTextColor={'white'}
-                placeholder="Create new label"
+                placeholder={editingLabel ? "Edit label" : "Create new label"}
                 style={styles.textInput}
                 autoFocus={true}
               />
             </View>
-            <TouchableOpacity onPress={handleCreateLabel}>
-              <Image style={[styles.icon, styles.blueIcon]} source={require('../Assets/checkmark.png')} />
+            <TouchableOpacity onPress={handleCreateOrUpdateLabel}>
+              <Image 
+                style={[styles.icon, styles.blueIcon]} 
+                source={require('../Assets/checkmark.png')} 
+              />
             </TouchableOpacity>
           </View>
         </View>
+        
+        {/* Display existing labels */}
+        <FlatList
+          data={Object.keys(labels)}
+          keyExtractor={(item) => item}
+          renderItem={({ item }) => (
+            <View style={styles.labelItem}>
+              <View style={styles.labelIconContainer}>
+                <Image 
+                  style={[styles.icon, styles.labelIcon]} 
+                  source={require('../Assets/tag.png')} 
+                />
+              </View>
+              <Text style={styles.labelText}>{item}</Text>
+              <View style={styles.labelActions}>
+                <TouchableOpacity onPress={() => handleEditLabel(item)}>
+                  <Image 
+                    style={[styles.icon, styles.actionIcon]} 
+                    source={require('../Assets/pencil.png')} 
+                  />
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => handleDeleteLabel(item)}>
+                  <Image 
+                    style={[styles.icon, styles.actionIcon, styles.deleteIcon]} 
+                    source={require('../Assets/trash.png')} 
+                  />
+                </TouchableOpacity>
+              </View>
+            </View>
+          )}
+        />
       </View>
     </SafeAreaView>
   );
@@ -133,9 +208,12 @@ const styles = StyleSheet.create({
   },
   textInput: {
     color: 'white',
+    flex: 1,
   },
   rowContainer: {
     flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
   },
   inputIcon: {
     tintColor: 'white',
@@ -144,4 +222,32 @@ const styles = StyleSheet.create({
   blueIcon: {
     tintColor: 'lightblue',
   },
+  labelItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: height * 0.02,
+    borderBottomWidth: 0.5,
+    borderBottomColor: '#555',
+    paddingHorizontal: width * 0.05,
+  },
+  labelIconContainer: {
+    marginRight: width * 0.03,
+  },
+  labelIcon: {
+    tintColor: 'lightblue',
+  },
+  labelText: {
+    color: 'white',
+    fontSize: width * 0.04,
+    flex: 1,
+  },
+  labelActions: {
+    flexDirection: 'row',
+  },
+  actionIcon: {
+    marginLeft: width * 0.03,
+  },
+  deleteIcon: {
+    tintColor: '#ff6b6b',
+  }
 });

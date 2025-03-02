@@ -29,6 +29,7 @@ export interface NoteContextType {
   addLabel: (labelName: string) => void;
   addNoteToLabel: (labelName: string, note: Note) => void;
   removeNoteFromLabel: (labelName: string, noteId: string) => void; // Added missing function
+  deleteLabel: (labelName: string) => void;
 }
 
 // Initial notes data
@@ -508,7 +509,16 @@ export const NoteProvider = ({ children }: { children: ReactNode }) => {
             setLabels({ ...labels, [labelName]: [] });
         }
     };
-
+    
+    const deleteLabel = (labelName: string) => {
+        if (labels[labelName]) {
+          // Create a copy of labels without the deleted label
+          const updatedLabels = { ...labels };
+          delete updatedLabels[labelName];
+          setLabels(updatedLabels);
+        }
+    };
+    
     const addNoteToLabel = (labelName: string, note: Note) => {
         if (labels[labelName]) {
             // Check if note already exists in this label
@@ -558,6 +568,7 @@ export const NoteProvider = ({ children }: { children: ReactNode }) => {
                 addLabel,
                 addNoteToLabel,
                 removeNoteFromLabel,
+                deleteLabel,
             }}
         >
             {children}
