@@ -1,12 +1,17 @@
 import { Keyboard, Image, SafeAreaView, StyleSheet, Text, TextInput, View, Dimensions, TouchableOpacity } from 'react-native';
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState, useContext } from 'react';
 import { useNavigation } from '@react-navigation/native';
+import { NoteContext, NoteContextType } from '../logic/NoteContext';
+
 const { width, height } = Dimensions.get('window');
 
 const Label = () => {
   const navigation = useNavigation();
   const textInputRef = useRef<TextInput>(null);
-  const [inputText, setinputText] = useState<string>('')
+  const [inputText, setInputText] = useState<string>('');
+  
+  // Access the context to use the addLabel function
+  const { addLabel } = useContext(NoteContext) as NoteContextType;
 
   // Focus when component mounts
   useEffect(() => {
@@ -34,6 +39,21 @@ const Label = () => {
     return unsubscribe;
   }, [navigation]);
 
+  // Handle creating a new label
+  const handleCreateLabel = () => {
+    if (inputText.trim()) {
+      // Add the new label to context
+      addLabel(inputText.trim());
+      
+      // Clear input and dismiss keyboard
+      setInputText('');
+      Keyboard.dismiss();
+      
+      // Navigate back to drawer
+      navigation.goBack();
+    }
+  };
+
   return (
     <SafeAreaView style={styles.safeAreaView}>
       <View style={styles.container}>
@@ -48,14 +68,14 @@ const Label = () => {
           <View style={styles.inputBox}>
             <View style={styles.rowContainer}>
               <TouchableOpacity onPress={() => {
-                setinputText('');
+                setInputText('');
                 Keyboard.dismiss();
               }}>
                 <Image style={[styles.icon, styles.inputIcon]} source={require('../Assets/x.square.png')} />
               </TouchableOpacity>
               <TextInput
                 value={inputText}
-                onChangeText={setinputText}
+                onChangeText={setInputText}
                 ref={textInputRef}
                 placeholderTextColor={'white'}
                 placeholder="Create new label"
@@ -63,7 +83,9 @@ const Label = () => {
                 autoFocus={true}
               />
             </View>
-            <Image style={[styles.icon, styles.blueIcon]} source={require('../Assets/checkmark.png')} />
+            <TouchableOpacity onPress={handleCreateLabel}>
+              <Image style={[styles.icon, styles.blueIcon]} source={require('../Assets/checkmark.png')} />
+            </TouchableOpacity>
           </View>
         </View>
       </View>
