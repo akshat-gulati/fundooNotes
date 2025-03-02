@@ -1,7 +1,8 @@
-import { Image, SafeAreaView, StyleSheet, Text, View, Dimensions, TouchableOpacity, TextInput, Alert } from 'react-native';
+import { Image, SafeAreaView, StyleSheet, Text, View, Dimensions, TouchableOpacity, TextInput, Alert, Modal } from 'react-native';
 import React, { useState, useEffect, useContext } from 'react';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { NoteContext, Note } from '../logic/NoteContext';
+import DateTimePicker from '@react-native-community/datetimepicker';
 
 const { width, height } = Dimensions.get('window');
 
@@ -29,7 +30,31 @@ const NoteEdit = () => {
     const [isPinned, setIsPinned] = useState(noteParam?.isPinned || false);
     const [hasReminder, setHasReminder] = useState(noteParam?.hasReminder || false);
     const [isArchived, setIsArchived] = useState(noteParam?.isArchived || false);
-    const [reminderDateTime, setReminderDateTime] = useState(noteParam?.reminderDateTime || '');
+    const [reminderDateTime, setReminderDateTime] = useState(
+        noteParam?.reminderDateTime ? new Date(noteParam.reminderDateTime) : new Date()
+    );
+
+    // State for date time picker
+    const [showDatePicker, setShowDatePicker] = useState(false);
+    const [showTimePicker, setShowTimePicker] = useState(false);
+    const [showReminderModal, setShowReminderModal] = useState(false);
+
+    // Format date for display
+    const formatDate = (date) => {
+        return date.toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric'
+        });
+    };
+
+    // Format time for display
+    const formatTime = (date) => {
+        return date.toLocaleTimeString('en-US', {
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    };
 
     // State for undo/redo functionality
     const [history, setHistory] = useState([]);
@@ -57,18 +82,49 @@ const NoteEdit = () => {
 
     // Handle reminder action
     const handleReminder = () => {
-        const newReminderState = !hasReminder;
-        setHasReminder(newReminderState);
-
-        if (newReminderState) {
-            // For simplicity, set reminder to one day from now
-            const oneDayLater = new Date();
-            oneDayLater.setDate(oneDayLater.getDate() + 1);
-            setReminderDateTime(oneDayLater.toISOString());
-            Alert.alert("Reminder set for tomorrow");
+        if (!hasReminder) {
+            // If turning on reminder, show the modal
+            setShowReminderModal(true);
         } else {
-            setReminderDateTime('');
+            // If turning off reminder, just disable it
+            setHasReminder(false);
             Alert.alert("Reminder removed");
+        }
+    };
+
+    // Handle date change
+    const handleDateChange = (event, selectedDate) => {
+        setShowDatePicker(false);
+        if (selectedDate) {
+            const currentDateTime = new Date(reminderDateTime);
+            selectedDate.setHours(currentDateTime.getHours(), currentDateTime.getMinutes());
+            setReminderDateTime(selectedDate);
+        }
+    };
+
+    // Handle time change
+    const handleTimeChange = (event, selectedTime) => {
+        setShowTimePicker(false);
+        if (selectedTime) {
+            const currentDateTime = new Date(reminderDateTime);
+            currentDateTime.setHours(selectedTime.getHours(), selectedTime.getMinutes());
+            setReminderDateTime(currentDateTime);
+        }
+    };
+
+    // Save reminder
+    const saveReminder = () => {
+        setHasReminder(true);
+        setShowReminderModal(false);
+        Alert.alert("Reminder set for " + formatDate(reminderDateTime) + " at " + formatTime(reminderDateTime));
+    };
+
+    // Cancel reminder
+    const cancelReminder = () => {
+        setShowReminderModal(false);
+        // If canceling a new reminder (not editing an existing one)
+        if (!hasReminder) {
+            setHasReminder(false);
         }
     };
 
@@ -87,7 +143,7 @@ const NoteEdit = () => {
             hasReminder,
             isArchived: newArchivedState,
             updatedAt: new Date().toISOString(),
-            reminderDateTime: hasReminder ? reminderDateTime : undefined
+            reminderDateTime: hasReminder ? reminderDateTime.toISOString() : undefined
         };
 
         // Archive the note using context
@@ -99,37 +155,37 @@ const NoteEdit = () => {
         }
     };
 
-const saveAndGoBack = () => {
-    // Check if title and content are not empty
-    if (!title.trim() || !noteContent.trim()) {
-        // If either is empty, do not save and return early
+    const saveAndGoBack = () => {
+        // Check if title and content are not empty
+        if (!title.trim() || !noteContent.trim()) {
+            // If either is empty, do not save and return early
+            navigation.goBack();
+            return;
+        }
+
+        // Create a note object to save
+        const updatedNote = {
+            id: noteParam?.id || Date.now().toString(),
+            title,
+            content: noteContent,
+            isPinned,
+            hasReminder,
+            isArchived,
+            updatedAt: new Date().toISOString(),
+            reminderDateTime: hasReminder ? reminderDateTime.toISOString() : undefined
+        };
+
+        // Save the note using context
+        updateNote(updatedNote);
+
+        // If this note came from a label screen, add it to that label using the context function
+        if (fromLabel) {
+            noteContext.addNoteToLabel(fromLabel, updatedNote);
+        }
+
+        // Navigate back
         navigation.goBack();
-        return;
-    }
-
-    // Create a note object to save
-    const updatedNote = {
-        id: noteParam?.id || Date.now().toString(),
-        title,
-        content: noteContent,
-        isPinned,
-        hasReminder,
-        isArchived,
-        updatedAt: new Date().toISOString(),
-        reminderDateTime: hasReminder ? reminderDateTime : undefined
     };
-    
-    // Save the note using context
-    updateNote(updatedNote);
-
-    // If this note came from a label screen, add it to that label using the context function
-    if (fromLabel) {
-        noteContext.addNoteToLabel(fromLabel, updatedNote);
-    }
-
-    // Navigate back
-    navigation.goBack();
-};
 
     // Handle back button click - save and navigate back
     const handleBack = () => {
@@ -188,7 +244,7 @@ const saveAndGoBack = () => {
                             hasReminder,
                             isArchived,
                             updatedAt: new Date().toISOString(),
-                            reminderDateTime: hasReminder ? reminderDateTime : undefined
+                            reminderDateTime: hasReminder ? reminderDateTime.toISOString() : undefined
                         };
 
                         // Delete the note using context
@@ -283,6 +339,68 @@ const saveAndGoBack = () => {
                         </TouchableOpacity>
                     </View>
                 </View>
+
+                {/* Reminder Modal */}
+                <Modal
+                    animationType="slide"
+                    transparent={true}
+                    visible={showReminderModal}
+                    onRequestClose={cancelReminder}
+                >
+                    <View style={styles.modalOverlay}>
+                        <View style={styles.modalContent}>
+                            <Text style={styles.modalTitle}>Set Reminder</Text>
+
+                            {/* Date and Time Display */}
+                            <View style={styles.dateTimeContainer}>
+                                <TouchableOpacity
+                                    style={styles.dateTimeButton}
+                                    onPress={() => setShowDatePicker(true)}
+                                >
+                                    <Text style={styles.dateTimeText}>{formatDate(reminderDateTime)}</Text>
+                                </TouchableOpacity>
+
+                                <TouchableOpacity
+                                    style={styles.dateTimeButton}
+                                    onPress={() => setShowTimePicker(true)}
+                                >
+                                    <Text style={styles.dateTimeText}>{formatTime(reminderDateTime)}</Text>
+                                </TouchableOpacity>
+                            </View>
+
+                            {/* Date Picker */}
+                            {showDatePicker && (
+                                <DateTimePicker
+                                    value={reminderDateTime}
+                                    mode="date"
+                                    display="default"
+                                    onChange={handleDateChange}
+                                    minimumDate={new Date()}
+                                />
+                            )}
+
+                            {/* Time Picker */}
+                            {showTimePicker && (
+                                <DateTimePicker
+                                    value={reminderDateTime}
+                                    mode="time"
+                                    display="default"
+                                    onChange={handleTimeChange}
+                                />
+                            )}
+
+                            {/* Modal Buttons */}
+                            <View style={styles.modalButtons}>
+                                <TouchableOpacity style={styles.modalButton} onPress={cancelReminder}>
+                                    <Text style={styles.modalButtonText}>Cancel</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity style={[styles.modalButton, styles.saveButton]} onPress={saveReminder}>
+                                    <Text style={styles.modalButtonText}>Save</Text>
+                                </TouchableOpacity>
+                            </View>
+                        </View>
+                    </View>
+                </Modal>
             </View>
         </SafeAreaView>
     );
@@ -345,5 +463,63 @@ const styles = StyleSheet.create({
     },
     bottomEachSection: {
         flexDirection: 'row',
-    }
+    },
+    // Modal Styles
+    modalOverlay: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    },
+    modalContent: {
+        backgroundColor: '#2D2D30',
+        width: width * 0.8,
+        borderRadius: 10,
+        padding: 20,
+        alignItems: 'center',
+    },
+    modalTitle: {
+        color: 'white',
+        fontSize: 22,
+        fontWeight: 'bold',
+        marginBottom: 20,
+    },
+    dateTimeContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        width: '100%',
+        marginBottom: 20,
+    },
+    dateTimeButton: {
+        backgroundColor: '#3D3D40',
+        padding: 12,
+        borderRadius: 8,
+        width: '48%',
+        alignItems: 'center',
+    },
+    dateTimeText: {
+        color: 'white',
+        fontSize: 16,
+    },
+    modalButtons: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        width: '100%',
+        marginTop: 20,
+    },
+    modalButton: {
+        padding: 12,
+        borderRadius: 8,
+        width: '48%',
+        alignItems: 'center',
+        backgroundColor: '#3D3D40',
+    },
+    saveButton: {
+        backgroundColor: '#007AFF',
+    },
+    modalButtonText: {
+        color: 'white',
+        fontSize: 16,
+        fontWeight: '500',
+    },
 });
