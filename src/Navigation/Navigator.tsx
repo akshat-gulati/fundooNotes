@@ -13,23 +13,32 @@ import Help from '../Screens/Help';
 import { createStackNavigator } from '@react-navigation/stack';
 import NoteEdit from '../Screens/NoteEdit';
 
+import { initialLabelData } from '../logic/NoteContext';
+
 const Drawer = createDrawerNavigator();
 
 const DrawerNavigation = () => {
   return (
-    <Drawer.Navigator
-      drawerContent={(props) => <CustomDrawerContent {...props} />}
-      screenOptions={{ headerShown: false, drawerStyle: { backgroundColor: '#2F2F34'}}}
-    >
-      <Drawer.Screen name="Home" component={Notes} />
-      <Drawer.Screen name="Reminders" component={Reminders} />
-      <Drawer.Screen name="Label" component={Label} />
-      <Drawer.Screen name="Archive" component={Archive} />
-      <Drawer.Screen name="Bin" component={Bin} />
-      <Drawer.Screen name="Settings" component={Settings} />
-      <Drawer.Screen name="Feedback" component={Feedback} />
-      <Drawer.Screen name="Help" component={Help} />
-    </Drawer.Navigator>
+   // Inside DrawerNavigation component in Navigator.tsx
+<Drawer.Navigator
+  drawerContent={(props) => <CustomDrawerContent {...props} />}
+  screenOptions={{ headerShown: false, drawerStyle: { backgroundColor: '#2F2F34'}}}
+>
+  <Drawer.Screen name="Home" component={Notes} />
+  <Drawer.Screen name="Reminders" component={Reminders} />
+  
+  {/* Add dynamic routes for labels */}
+  {Object.keys(initialLabelData).map((label) => (
+    <Drawer.Screen key={label} name={label} component={Label} />
+  ))}
+  
+  <Drawer.Screen name="Label" component={Label} />
+  <Drawer.Screen name="Archive" component={Archive} />
+  <Drawer.Screen name="Bin" component={Bin} />
+  <Drawer.Screen name="Settings" component={Settings} />
+  <Drawer.Screen name="Feedback" component={Feedback} />
+  <Drawer.Screen name="Help" component={Help} />
+</Drawer.Navigator>
   );
 };
 

@@ -1,11 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { View, Text, StyleSheet, Image, Dimensions } from 'react-native';
 import { DrawerContentScrollView, DrawerItem } from '@react-navigation/drawer';
+import { NoteContext, NoteContextType } from '../logic/NoteContext'; // Add this import
 
 const { width, height } = Dimensions.get('window');
 
 const CustomDrawerContent = (props: any) => {
   const [selectedItem, setSelectedItem] = useState('');
+  const { labels } = useContext(NoteContext) as NoteContextType; // Add this line to access context
 
   const handlePress = (item: string) => {
     setSelectedItem(item);
@@ -36,6 +38,19 @@ const CustomDrawerContent = (props: any) => {
         />
         <View style={styles.divider} />
         <Text style={styles.sectionHeading}>LABELS</Text>
+        
+        {/* Add this section to show labels from context */}
+        {Object.keys(labels).map((labelName) => (
+          <DrawerItem
+            key={labelName}
+            label={labelName}
+            icon={() => <Image source={require('../Assets/tag.png')} style={styles.icon} />}
+            onPress={() => handlePress(labelName)}
+            labelStyle={styles.drawerLabel}
+            style={selectedItem === labelName ? styles.selectedItem : null}
+          />
+        ))}
+        
         <DrawerItem
           label="Create new Label"
           icon={() => <Image source={require('../Assets/plus.png')} style={styles.icon} />}
