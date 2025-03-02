@@ -9,17 +9,20 @@ const NoteEdit = () => {
     const navigation = useNavigation();
     const route = useRoute();
     const noteContext = useContext(NoteContext);
-    
+    // Inside NoteEdit component
+
+    const fromLabel = route.params?.fromLabel;
+
     // Check if context exists
     if (!noteContext) {
         throw new Error("NoteEdit must be used within a NoteProvider");
     }
-    
+
     const { addNote, archiveNote, deleteNote, updateNote } = noteContext;
-    
+
     // Get note from params if editing existing note
     const noteParam = route.params?.note;
-    
+
     // State for the note content
     const [title, setTitle] = useState(noteParam?.title || '');
     const [noteContent, setNoteContent] = useState(noteParam?.content || '');
@@ -56,7 +59,7 @@ const NoteEdit = () => {
     const handleReminder = () => {
         const newReminderState = !hasReminder;
         setHasReminder(newReminderState);
-        
+
         if (newReminderState) {
             // For simplicity, set reminder to one day from now
             const oneDayLater = new Date();
@@ -74,7 +77,7 @@ const NoteEdit = () => {
         const newArchivedState = !isArchived;
         setIsArchived(newArchivedState);
         Alert.alert("Note " + (isArchived ? "unarchived" : "archived"));
-        
+
         // Create a note object to archive/unarchive
         const noteData = {
             id: noteParam?.id || Date.now().toString(),
@@ -86,46 +89,47 @@ const NoteEdit = () => {
             updatedAt: new Date().toISOString(),
             reminderDateTime: hasReminder ? reminderDateTime : undefined
         };
-        
+
         // Archive the note using context
         archiveNote(noteData);
-        
+
         // If archiving, save and go back after a short delay
         if (newArchivedState) {
             setTimeout(() => saveAndGoBack(), 1000);
         }
     };
 
-    // Save the note and navigate back
-    const saveAndGoBack = () => {
-        // Check if title and content are not empty
-        if (!title.trim() || !noteContent.trim()) {
-            // If either is empty, do not save and return early
-            navigation.goBack();
-            return;
-        }
-    
-        // Create a note object to pass back
-        const noteData = {
-            id: noteParam?.id || Date.now().toString(),
-            title,
-            content: noteContent,
-            isPinned,
-            hasReminder,
-            isArchived,
-            updatedAt: new Date().toISOString(),
-            reminderDateTime: hasReminder ? reminderDateTime : undefined
-        };
-    
-        // Add/Update the note in context
-        addNote(noteData);
-        
-        // Set params before navigating back
-        navigation.setParams({ savedNote: noteData });
-        
-        // Navigate back to the Notes screen with the saved note
+const saveAndGoBack = () => {
+    // Check if title and content are not empty
+    if (!title.trim() || !noteContent.trim()) {
+        // If either is empty, do not save and return early
         navigation.goBack();
+        return;
+    }
+
+    // Create a note object to save
+    const updatedNote = {
+        id: noteParam?.id || Date.now().toString(),
+        title,
+        content: noteContent,
+        isPinned,
+        hasReminder,
+        isArchived,
+        updatedAt: new Date().toISOString(),
+        reminderDateTime: hasReminder ? reminderDateTime : undefined
     };
+    
+    // Save the note using context
+    updateNote(updatedNote);
+
+    // If this note came from a label screen, add it to that label using the context function
+    if (fromLabel) {
+        noteContext.addNoteToLabel(fromLabel, updatedNote);
+    }
+
+    // Navigate back
+    navigation.goBack();
+};
 
     // Handle back button click - save and navigate back
     const handleBack = () => {
@@ -186,10 +190,10 @@ const NoteEdit = () => {
                             updatedAt: new Date().toISOString(),
                             reminderDateTime: hasReminder ? reminderDateTime : undefined
                         };
-                        
+
                         // Delete the note using context
                         deleteNote(noteData);
-                        
+
                         Alert.alert("Note deleted");
                         navigation.goBack();
                     }
