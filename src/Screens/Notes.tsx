@@ -4,7 +4,7 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import Svg, { Rect, Defs, Mask, Circle } from 'react-native-svg';
 import AccountModal from '../Components/AccountModal';
 import { NoteContext, Note } from '../logic/NoteContext';
-
+import { onDisplayNotification } from '../Components/onDisplayNotification';
 const { width, height } = Dimensions.get('window');
 
 const formatDateTime = (isoString) => {
@@ -28,7 +28,9 @@ const SearchBar = () => {
         <Text style={styles.searchText}>Search Your Notes</Text>
       </View>
       <View style={styles.rightmost}>
+        <TouchableOpacity onPress={() => onDisplayNotification() }>
         <Image style={[styles.searchIcon, styles.gridIcon]} source={require('../Assets/rectangle.grid.1x2.png')} />
+        </TouchableOpacity>
         <TouchableOpacity onPress={() => setModalVisible(true)}>
           <Image style={[styles.searchIcon, styles.profileIcon]} source={require('../Assets/person.crop.circle.png')} />
         </TouchableOpacity>
