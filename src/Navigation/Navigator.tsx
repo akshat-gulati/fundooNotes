@@ -10,7 +10,7 @@ import Archive from '../Screens/Archive';
 import Bin from '../Screens/Bin';
 import Settings from '../Screens/Settings';
 import Feedback from '../NotWorking/Feedback';
-import Help from '../NotWorking/Help';
+import MyWebScreen from '../Screens/MyWebScreen';
 import { createStackNavigator } from '@react-navigation/stack';
 import NoteEdit from '../Screens/NoteEdit';
 import { NoteContext } from '../logic/NoteContext';
@@ -38,7 +38,7 @@ const DrawerNavigation = () => {
       <Drawer.Screen name="Bin" component={Bin} />
       <Drawer.Screen name="Settings" component={Settings} />
       <Drawer.Screen name="Feedback" component={Feedback} />
-      <Drawer.Screen name="Help" component={Help} />
+      <Drawer.Screen name="MyWebScreen" component={MyWebScreen} options={{headerShown: true, drawerStyle: { backgroundColor: '#2F2F34'}}} />
     </Drawer.Navigator>
   );
 };

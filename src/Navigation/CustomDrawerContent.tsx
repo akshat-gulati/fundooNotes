@@ -91,9 +91,9 @@ const CustomDrawerContent = (props: any) => {
         <DrawerItem
           label="Help"
           icon={() => <Image source={require('../Assets/questionmark.circle.png')} style={styles.icon} />}
-          onPress={() => handlePress('Help')}
+          onPress={() => handlePress('MyWebScreen')}
           labelStyle={styles.drawerLabel}
-          style={selectedItem === 'Help' ? styles.selectedItem : null}
+          style={selectedItem === 'MyWebScreen' ? styles.selectedItem : null}
         />
       </View>
     </DrawerContentScrollView>
