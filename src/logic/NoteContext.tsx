@@ -1,5 +1,5 @@
 import React, { createContext, useState, ReactNode, useEffect } from 'react';
-
+import { scheduleReminderNotification, cancelReminderNotification } from '../Components/scheduleReminderNotification';
 // Updated Note interface with reminderDateTime
 export interface Note {
   id: string;
@@ -100,7 +100,7 @@ export const initialNoteData: Note[] = [{
     hasReminder: true,
     isArchived: false,
     updatedAt: new Date('2025-02-28').toISOString(),
-    reminderDateTime: new Date('2025-03-15T09:00:00').toISOString(),
+    reminderDateTime: new Date('2025-03-3T11:12:00').toISOString(),
   }, {
     id: '9',
     title: 'Conference Call',
@@ -267,6 +267,10 @@ export const NoteProvider = ({ children }: { children: ReactNode }) => {
         // If note has a reminder, add/update it in reminders as well
         if (noteWithUpdatedTime.hasReminder) {
             addReminder(noteWithUpdatedTime, noteWithUpdatedTime.reminderDateTime);
+            scheduleReminderNotification(noteWithUpdatedTime);
+        }
+        else {
+            cancelReminderNotification(noteWithUpdatedTime.id);
         }
     };
     
@@ -345,7 +349,9 @@ export const NoteProvider = ({ children }: { children: ReactNode }) => {
             hasReminder: true,
             reminderDateTime: dateTime || reminder.reminderDateTime || new Date().toISOString(),
             updatedAt: new Date().toISOString()
+           
         };
+        scheduleReminderNotification(reminderToAdd);
         
         // Check if reminder already exists
         const existingReminderIndex = reminders.findIndex(r => r.id === reminderToAdd.id);
@@ -476,6 +482,7 @@ export const NoteProvider = ({ children }: { children: ReactNode }) => {
         // Remove from reminders if it exists there
         if (noteToDelete.hasReminder) {
             setReminders(reminders.filter(r => r.id !== noteToDelete.id));
+            cancelReminderNotification(noteToDelete.id);
         }
         
         // Remove from all labels
